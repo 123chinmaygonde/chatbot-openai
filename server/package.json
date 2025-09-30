@@ -20,6 +20,7 @@
     "express": "^4.21.2",
     "langchain": "^0.3.35",
     "multer": "^2.0.2",
+    "openai": "^5.23.2",
     "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
