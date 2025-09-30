@@ -1,0 +1,39 @@
+import { Worker } from 'bullmq';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { QdrantVectorStore } from '@langchain/qdrant';
+import { Document } from '@langchain/core/documents';
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { CharacterTextSplitter } from "@langchain/textsplitters";
+
+const worker = new Worker(
+  'file-upload-queue',
+  async (job) => {
+    console.log(`Job:`, job.data);
+    const data = JSON.parse(job.data);
+
+    const loader = new PDFLoader(data.path);
+    const docs = await loader.load();
+
+    const embeddings = new OpenAIEmbeddings({
+      model: "text-embedding-3-small",
+      apiKey:"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"
+    });
+
+    const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+      url: `http://localhost:6333`,
+      collectionName: "langchainjs-testing",
+    });
+    await vectorStore.addDocuments(docs);
+    console.log("all docs are uploaded")
+
+
+    // You can add further processing of docs here if needed
+  },
+  {
+    concurrency: 100,
+    connection: {
+      host: 'localhost',
+      port: 6379,
+    },
+  }
+);
